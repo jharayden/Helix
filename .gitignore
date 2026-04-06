@@ -1,0 +1,41 @@
+# -------------------------------------------------------------------
+# 🛡️ Project Helix V4.0 - Git Ignore Shield
+# -------------------------------------------------------------------
+
+# 1. 绝对机密与环境变量 (Critical Security)
+.env
+.env.*
+!.env.example
+
+# 2. 本地金库数据 - [修正：允许同步以解决拉不到文件的问题]
+!Vault/
+!Arxiv_Papers/
+!GitHuber/
+!*.md
+
+# 3. 允许上传的特例文档 (Except for the README)
+!README.md
+
+# 4. Python 缓存与垃圾文件 (Python Byte-compiled / Cache files)
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# 5. 虚拟环境 (Virtual Environments)
+venv/
+.venv/
+env/
+.env_dir/
+
+# 6. 操作系统与 IDE 垃圾 (OS & IDE files)
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 7. 桌面应用打包产物 (Build Artifacts - NEVER UPLOAD)
+build/
+dist/
+*.exe
+*.spec

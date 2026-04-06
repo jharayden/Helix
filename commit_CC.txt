@@ -1,0 +1,8 @@
+CC: DRY consolidation, resilience engine, and model config externalization
+
+- Extract shared utils.py module (ObsidianFileStorage, EmailDispatcher, retry_with_backoff, check_github_rate_limit) used by both Arxiv Hunter and GitHuber
+- Add @retry_with_backoff decorator with exponential backoff (2s→4s→8s) to all API calls
+- Add GitHub rate limit inspection via X-RateLimit-Remaining header; blocks before 429 hits
+- Externalize model names to ARXIV_MODEL and GITHUB_MODEL env vars (default: glm-5)
+- Update .env.example with new model config options
+- Rename Tombstone → CC Edition in README; add Resilience Engine and CC refactor to roadmap

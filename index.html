@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Helix Matrix</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        helix: { neon: '#00FF66', dark: '#050505', panel: '#0a0a0a', border: '#1f1f1f' }
+                    },
+                    fontFamily: {
+                        syncopate: ['Syncopate', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif'],
+                        mono: ['Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.34/dist/lenis.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        body { background-color: #050505; color: #ffffff; margin: 0; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #1f1f1f; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00FF66; }
+
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid #1f1f1f;
+        }
+
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-family: 'Syncopate', sans-serif; color: #00FF66; margin-top: 1.5rem; margin-bottom: 0.5rem;}
+        .markdown-body p { margin-bottom: 1rem; line-height: 1.6; color: #d1d5db; }
+        .markdown-body strong { color: #ffffff; }
+        .markdown-body blockquote { border-left: 2px solid #00FF66; padding-left: 1rem; margin-left: 0; color: #9ca3af; background: rgba(0,255,102,0.05); padding: 1rem; border-radius: 4px;}
+        
+        .nav-btn.active {
+            border-color: #00FF66;
+            color: #00FF66;
+            box-shadow: 0px 0px 10px rgba(0, 255, 102, 0.2);
+        }
+        .nav-btn.active .group-hover-text { color: #00FF66; }
+
+        #vault-panel {
+            display: none; 
+            position: fixed;
+            inset: 0;
+            background-color: #0a0a0a;
+            z-index: 55;
+            flex-direction: column;
+            overflow: hidden;
+            clip-path: circle(0% at 50% 50%);
+        }
+        
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        #vault-file-list::-webkit-scrollbar { width: 4px; }
+        #vault-file-reader::-webkit-scrollbar { width: 6px; }
+
+        .ghost-nav-btn {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #333;
+            background-color: #0a0a0a;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 1;
+            cursor: pointer;
+        }
+        
+        .ghost-nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #00FF66;
+            transform: translateX(-101%);
+            transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
+            z-index: -1;
+        }
+        
+        .ghost-nav-btn:hover { border-color: #00FF66; transform: translateX(4px); box-shadow: 0 0 15px rgba(0,255,102,0.3); }
+        .ghost-nav-btn:hover::before { transform: translateX(0); }
+        .ghost-nav-btn:hover * { color: #000000 !important; }
+        .ghost-nav-btn.active { border-color: #00FF66; background: rgba(0, 255, 102, 0.08); }
+        .ghost-nav-btn.active .btn-title { color: #00FF66; }
+        .ghost-nav-btn.active .btn-sub { color: #a7f3d0; }
+    </style>
+</head>
+<body class="h-screen w-full flex font-inter overflow-hidden">
+
+    <aside class="w-80 h-full glass-panel border-r border-helix-border flex flex-col p-6 z-10 relative">
+        <div class="mb-12">
+            <h1 class="text-2xl font-syncopate font-bold text-white tracking-widest">HELIX<span class="text-helix-neon">.</span></h1>
+            <p class="text-xs text-gray-500 mt-2 tracking-widest uppercase">Command Center</p>
+        </div>
+
+        <nav class="flex flex-col gap-4 flex-1">
+            <button id="nav-synapse" onclick="switchTab('synapse')" class="ghost-nav-btn text-left px-4 py-3 rounded active">
+                <div class="flex items-center gap-3 relative z-10">
+                    <span class="text-xl">🧠</span>
+                    <div>
+                        <span class="btn-sub block text-xs text-gray-400 mb-1 tracking-wider uppercase transition-colors duration-300">Cognitive Core</span>
+                        <span class="btn-title font-syncopate text-sm tracking-wide text-gray-200 transition-colors duration-300">SYNAPSE</span>
+                    </div>
+                </div>
+            </button>
+            
+            <button id="nav-arxiv" onclick="switchTab('arxiv')" class="ghost-nav-btn text-left px-4 py-3 rounded">
+                <div class="flex items-center gap-3 relative z-10">
+                    <span class="text-xl">🌅</span>
+                    <div>
+                        <span class="btn-sub block text-xs text-gray-400 mb-1 tracking-wider uppercase transition-colors duration-300">Morning Track</span>
+                        <span class="btn-title font-syncopate text-sm tracking-wide text-gray-200 transition-colors duration-300">ARXIV</span>
+                    </div>
+                </div>
+            </button>
+            
+            <button id="nav-github" onclick="switchTab('github')" class="ghost-nav-btn text-left px-4 py-3 rounded">
+                <div class="flex items-center gap-3 relative z-10">
+                    <span class="text-xl">🌃</span>
+                    <div>
+                        <span class="btn-sub block text-xs text-gray-400 mb-1 tracking-wider uppercase transition-colors duration-300">Nightly Track</span>
+                        <span class="btn-title font-syncopate text-sm tracking-wide text-gray-200 transition-colors duration-300">GITHUB</span>
+                    </div>
+                </div>
+            </button>
+            
+            <button id="nav-vault" onclick="openVault()" class="ghost-nav-btn text-left px-4 py-3 rounded">
+                <div class="flex items-center gap-3 relative z-10">
+                    <span class="text-xl">🗂️</span>
+                    <div>
+                        <span class="btn-sub block text-xs text-gray-400 mb-1 tracking-wider uppercase transition-colors duration-300">Secure Files</span>
+                        <span class="btn-title font-syncopate text-sm tracking-wide text-gray-200 transition-colors duration-300">THE VAULT</span>
+                    </div>
+                </div>
+            </button>
+        </nav>
+
+        <div class="mt-auto pt-6 border-t border-helix-border">
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-helix-neon animate-pulse"></div>
+                <span class="text-xs font-mono text-gray-400">API: 127.0.0.1:8000 Online 🔴</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 h-full relative overflow-y-auto bg-grid-pattern p-12" data-lenis-prevent>
+        <div id="main-ignition-deck">
+            <div class="max-w-4xl mx-auto mt-10">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-helix-neon opacity-[0.03] blur-[100px] pointer-events-none"></div>
+
+                <div id="header-container" class="mb-10">
+                    <h2 id="view-title" class="text-4xl font-syncopate font-bold text-white mb-4">Arxiv Radar</h2>
+                    <p id="view-desc" class="text-gray-400 text-lg font-light tracking-wide">Target the latest theoretical breakthroughs.</p>
+                </div>
+
+                <div id="control-deck" class="glass-panel p-6 rounded-lg mb-8 flex gap-4 items-center">
+                    <input type="text" id="target-topic" value="" class="flex-1 bg-black border border-helix-border text-helix-neon font-mono px-4 py-3 rounded focus:outline-none focus:border-helix-neon transition-colors" placeholder="Enter Target Sector (Leave empty for defaults)...">
+                    <button id="ignite-btn" onclick="igniteEngine()" class="bg-helix-neon text-black font-syncopate font-bold px-8 py-3 rounded hover:bg-white transition-colors tracking-widest shadow-[0_0_15px_rgba(0,255,102,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)]">
+                        IGNITE
+                    </button>
+                </div>
+
+                <div id="telemetry-screen" class="glass-panel p-8 rounded-lg min-h-[400px] relative">
+                    <canvas id="radar-matrix-canvas" class="absolute inset-0 z-10 opacity-0 pointer-events-none rounded-lg"></canvas>
+
+                    <div id="output-content" class="markdown-body font-inter text-sm">
+                        <p class="text-gray-500 font-mono italic">>> Awaiting command sequence...</p>
+                    </div>
+                </div>
+
+                <div id="synapse-screen" style="display: none;" class="flex flex-col h-[calc(100vh-200px)] mt-0">
+                    <div id="chat-history" class="flex-1 glass-panel p-6 rounded-t-lg overflow-y-auto space-y-6 overscroll-contain relative" data-lenis-prevent>
+                        <canvas id="synapse-matrix-canvas" class="absolute inset-0 z-10 opacity-0 pointer-events-none rounded-t-lg"></canvas>
+                        <div class="flex gap-4">
+                            <div class="w-8 h-8 rounded bg-helix-neon text-black flex items-center justify-center font-bold text-sm shrink-0">H</div>
+                            <div class="flex-1 bg-black border border-helix-border rounded-lg p-4 text-sm text-gray-300 markdown-body">
+                                <p>SYNAPSE Core online. Mount a file from the Vault or type your query.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel border-t-0 p-4 rounded-b-lg border border-helix-border flex flex-col gap-3 relative">
+                        <div id="mounted-file-pill" class="hidden items-center gap-2 self-start bg-helix-neon/20 border border-helix-neon text-helix-neon text-xs font-mono px-3 py-1 rounded-full">
+                            <span>📎 <span id="mounted-file-name">Arxiv_xxx.md</span></span>
+                            <button onclick="unmountFile()" class="hover:text-white ml-2">×</button>
+                        </div>
+
+                        <div id="attachment-modal" class="hidden absolute bottom-[80px] left-4 w-72 bg-black border border-helix-border rounded-lg shadow-[0_0_30px_rgba(0,0,0,0.8)] z-50 flex flex-col max-h-64">
+                            <div class="p-3 border-b border-helix-border text-xs font-syncopate text-gray-400">Mount Intel</div>
+                            <div id="attachment-list" class="flex-1 overflow-y-auto p-2 space-y-1 overscroll-contain" data-lenis-prevent></div>
+                        </div>
+
+                        <div class="flex gap-3 items-end">
+                            <button onclick="toggleAttachmentModal()" class="w-10 h-10 rounded border border-helix-border bg-black text-gray-400 hover:text-helix-neon hover:border-helix-neon transition-colors flex items-center justify-center text-lg shrink-0">📎</button>
+                            <textarea id="chat-input" rows="1" class="flex-1 bg-black border border-helix-border text-helix-neon font-mono px-4 py-3 rounded focus:outline-none focus:border-helix-neon transition-colors resize-none overflow-hidden" placeholder="Command SYNAPSE..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                            <button onclick="sendChatMessage()" class="w-24 h-10 bg-helix-neon text-black font-syncopate font-bold rounded hover:bg-white transition-colors tracking-widest shrink-0">SEND</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="vault-panel" class="bg-black">
+        <div class="absolute inset-0 bg-grid opacity-50"></div>
+        
+        <header class="h-20 w-full glass-panel border-b border-helix-border flex items-center justify-between px-10 relative z-20">
+            <h1 class="text-2xl font-syncopate font-bold text-white tracking-widest group">🗂️<span class="ml-3 text-sm font-light text-gray-300">SECURE INTELLIGENCE</span> VAULT<span class="text-helix-neon">.</span></h1>
+            <button onclick="closeVault()" class="absolute top-6 right-6 text-gray-400 hover:text-white font-syncopate tracking-widest text-xs transition-colors p-4 hover:scale-105 z-[70]">
+                [ CLOSE ]
+            </button>
+        </header>
+
+        <main class="flex-1 w-full p-8 flex gap-8 items-start relative z-10">
+            <aside class="w-1/3 h-[calc(100vh-160px)] glass-panel border border-helix-border rounded-lg p-6 flex flex-col gap-4 sub-element">
+                <h3 class="text-base font-syncopate text-gray-400 uppercase tracking-widest border-l-2 border-helix-neon pl-3 mb-2">Historical Intel</h3>
+                
+                <div class="flex gap-2 mb-2 p-1 bg-black border border-helix-border rounded">
+                    <button id="filter-all" onclick="filterVault('all')" class="vault-filter-btn flex-1 py-1 text-xs font-mono rounded bg-helix-neon text-black font-bold transition-all">ALL</button>
+                    <button id="filter-arxiv" onclick="filterVault('arxiv')" class="vault-filter-btn flex-1 py-1 text-xs font-mono rounded text-gray-500 hover:text-white transition-all">ARXIV</button>
+                    <button id="filter-github" onclick="filterVault('github')" class="vault-filter-btn flex-1 py-1 text-xs font-mono rounded text-gray-500 hover:text-white transition-all">GITHUB</button>
+                </div>
+
+                <div id="vault-file-list" class="flex-1 overflow-y-auto space-y-3 pr-3 overscroll-contain" data-lenis-prevent>
+                    <p class="text-gray-500 font-mono italic text-sm text-center">Awaiting file...</p>
+                </div>
+            </aside>
+            
+            <section class="flex-1 h-[calc(100vh-160px)] glass-panel border border-helix-border rounded-lg p-10 sub-element overflow-hidden flex flex-col relative">
+                <div class="absolute top-0 right-0 w-48 h-48 bg-helix-neon/10 blur-[50px] -z-10 pointer-events-none"></div>
+                <h3 id="read-file-name" class="text-xl md:text-2xl font-syncopate font-bold text-white mb-8 border-b border-helix-border pb-4 tracking-wide group flex items-center gap-4">🧬 <span class="group-hover:text-helix-neon transition-colors">Select Intelligence Package</span></h3>
+                <div id="vault-file-reader" class="flex-1 overflow-y-auto markdown-body text-sm pr-4 overscroll-contain" data-lenis-prevent>
+                    <p class="text-gray-500 font-mono italic text-sm">Awaiting target selection for decryption...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smooth: true });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        let currentTab = 'arxiv';
+        const marked = window.marked;
+        let vaultDataCache = { arxiv_papers: [], github_repos: [] };
+        let chatContext = [];
+        let mountedFilePath = null;
+
+        gsap.from(".nav-btn", { x: -20, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power3.out", delay: 0.2 });
+        gsap.from("#control-deck", { y: 20, opacity: 0, duration: 0.8, ease: "power3.out", delay: 0.4 });
+        gsap.from("#telemetry-screen", { y: 20, opacity: 0, duration: 0.8, ease: "power3.out", delay: 0.6 });
+
+        let tabMemory = {
+            arxiv: { content: '<p class="text-gray-500 font-mono italic">>> Awaiting command sequence...</p>', input: '' },
+            github: { content: '<p class="text-gray-500 font-mono italic">>> Awaiting command sequence...</p>', input: '' }
+        };
+
+        function switchTab(strand) {
+            const previousTab = currentTab;
+            currentTab = strand;
+            
+            const title = document.getElementById('view-title');
+            const desc = document.getElementById('view-desc');
+            const radarDeck = document.getElementById('control-deck');
+            const radarScreen = document.getElementById('telemetry-screen');
+            const synapseScreen = document.getElementById('synapse-screen');
+            const outputContent = document.getElementById('output-content');
+            const topicInput = document.getElementById('target-topic');
+            
+            if (previousTab === 'arxiv' || previousTab === 'github') {
+                tabMemory[previousTab].content = outputContent.innerHTML;
+                tabMemory[previousTab].input = topicInput.value;
+            }
+
+            document.querySelectorAll('.ghost-nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`nav-${strand}`).classList.add('active');
+
+            if (strand === 'arxiv' || strand === 'github') {
+                outputContent.innerHTML = tabMemory[strand].content;
+                topicInput.value = tabMemory[strand].input;
+                topicInput.placeholder = strand === 'arxiv' ? "Enter Sector (Empty = Embodied AI)..." : "Enter Keyword (Empty = Trending Top)...";
+            }
+
+            gsap.to([title, desc], { opacity: 0, duration: 0.2, onComplete: () => {
+                if(strand === 'arxiv' || strand === 'github') {
+                    title.innerText = strand === 'arxiv' ? "Arxiv Radar" : "Github Catch";
+                    desc.innerText = strand === 'arxiv' ? "Target theoretical breakthroughs." : "Hunt the fastest-growing open-source repos.";
+                    radarDeck.style.display = "flex"; radarScreen.style.display = "block"; synapseScreen.style.display = "none";
+                } else if (strand === 'synapse') {
+                    title.innerText = "SYNAPSE Core";
+                    desc.innerText = "Direct neural link to GLM Cognitive Engine.";
+                    radarDeck.style.display = "none"; radarScreen.style.display = "none"; synapseScreen.style.display = "flex";
+                    gsap.fromTo(synapseScreen, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, clearProps: "all" });
+                }
+                gsap.to([title, desc], { opacity: 1, duration: 0.2 });
+            }});
+        }
+
+        async function igniteEngine() {
+            const output = document.getElementById('output-content');
+            let topic = document.getElementById('target-topic').value.trim();
+
+            // 找到点火按钮，并瞬间切换为“思考模式”
+            const igniteBtn = document.getElementById('ignite-btn');
+            igniteBtn.innerText = 'THINKING...';
+            
+            // [V4.0 FIX] 不在前端写死任何默认值，直接传空字符串，让后端去读 .env！
+            if (!topic) topic = "";
+            
+            output.innerHTML = '';
+            runMatrixDecryption('radar-matrix-canvas');
+
+            const endpoint = currentTab === 'arxiv' ? 'http://127.0.0.1:8000/api/arxiv/ignite' : 'http://127.0.0.1:8000/api/github/ignite';
+            const requestOptions = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target_topic: topic }) };
+
+            try {
+                const response = await fetch(endpoint, requestOptions);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    marked.setOptions({ breaks: true });
+                    let cleanText = data.payload.replace(/\*\*(Authors|Link|Why this one, bro\?|Tech Stack|One-Line Pitch|Repo Link):\*\*/g, '<br><br>**$1:**');
+                    cleanText = cleanText.replace(/>\s*\[!(info|summary|example|quote|abstract)\]/gi, '> 💡⚡'); 
+                    output.innerHTML = marked.parse(cleanText);
+                    gsap.from(output, { opacity: 0, y: 10, duration: 0.5, clearProps: "all" });
+                } else output.innerHTML = `<p class="text-red-500 font-mono text-center mt-10 p-4 border border-red-900 rounded bg-red-950/20">>> [ERROR] System Failure in Cognitive Layer: ${data.detail}</p>`;
+                } catch (error) { output.innerHTML = `<p class="text-red-500 font-mono text-center mt-10 p-4 border border-red-900 rounded bg-red-950/20">>> [FATAL] Connection to Helix Backend Severed.</p>`; } 
+                finally {
+                    stopMatrixDecryption('radar-matrix-canvas'); // 数据一回来，立刻踩刹车！
+                    igniteBtn.innerText = 'IGNITE';
+                }
+            }
+
+        const vaultPanel = document.getElementById('vault-panel');
+        function openVault() {
+            document.body.style.overflow = 'hidden'; 
+            document.querySelectorAll('.ghost-nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('nav-vault').classList.add('active');
+            gsap.timeline().set(vaultPanel, { display: "flex", clipPath: "circle(0% at 50% 50%)" })
+              .to(vaultPanel, { clipPath: "circle(150% at 50% 50%)", duration: 1.2, ease: "expo.inOut" })
+              .fromTo(".sub-element", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: "power3.out", clearProps: "all" }, "-=0.6")
+              .call(() => { fetchVaultFiles(); });
+        }
+        function closeVault() {
+            gsap.timeline().to(vaultPanel, { clipPath: "circle(0% at 50% 50%)", duration: 1.0, ease: "expo.inOut" })
+              .set(vaultPanel, { display: "none" })
+              .call(() => { document.body.style.overflow = ''; switchTab(currentTab); });
+        }
+
+        async function fetchVaultFiles() {
+            const listContainer = document.getElementById('vault-file-list');
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/vault/list');
+                vaultDataCache = await response.json(); filterVault('all');
+            } catch (error) { listContainer.innerHTML = `<p class="text-red-500 font-mono text-center p-4 border border-red-900 rounded bg-red-950/20 text-xs">>> [ERROR] Fatal: Vault synchronization severd.</p>`; }
+        }
+
+        function filterVault(type) {
+            const listContainer = document.getElementById('vault-file-list');
+            document.querySelectorAll('.vault-filter-btn').forEach(btn => { btn.classList.remove('bg-helix-neon', 'text-black', 'font-bold'); btn.classList.add('text-gray-500'); });
+            const activeBtn = document.getElementById(`filter-${type}`);
+            activeBtn.classList.remove('text-gray-500'); activeBtn.classList.add('bg-helix-neon', 'text-black', 'font-bold');
+            listContainer.innerHTML = ''; let count = 0;
+            if (type === 'all' || type === 'arxiv') vaultDataCache.arxiv_papers.forEach(file => { listContainer.appendChild(createFileButton('Arxiv: ' + file.name, file.path)); count++; });
+            if (type === 'all' || type === 'github') vaultDataCache.github_repos.forEach(file => { listContainer.appendChild(createFileButton('GitHub: ' + file.name, file.path)); count++; });
+            if(count === 0) listContainer.innerHTML = '<p class="text-gray-600 font-mono italic text-sm p-4 text-center">No secured intel packages found in this sector.</p>';
+            else gsap.fromTo(".ghost-nav-btn.vault-file-btn", { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.05, ease: "power2.out", clearProps: "all" });
+        }
+
+        let currentVaultFilePath = null;
+        function createFileButton(displayName, fullPath) {
+            const btn = document.createElement('button');
+            const activeClass = (fullPath === currentVaultFilePath) ? 'active' : '';
+            btn.className = `ghost-nav-btn vault-file-btn w-full text-left px-4 py-3 rounded border border-helix-border mb-3 block ${activeClass}`;
+            btn.innerHTML = `<div class="relative z-10"><span class="btn-sub block text-[10px] text-gray-500 mb-1 tracking-wider uppercase transition-colors duration-300">Intel Package</span><span class="btn-title font-mono text-xs tracking-wide text-gray-200 transition-colors duration-300">${displayName}</span></div>`;
+            btn.onclick = () => {
+                currentVaultFilePath = fullPath;
+                document.querySelectorAll('.vault-file-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active'); readVaultFile(fullPath, displayName);
+            }; return btn;
+        }
+
+        async function readVaultFile(filePath, displayName) {
+            const readerHeader = document.getElementById('read-file-name');
+            const readerContent = document.getElementById('vault-file-reader');
+            try {
+                marked.setOptions({ breaks: true });
+                readerContent.innerHTML = '<p class="text-helix-neon font-mono animate-pulse p-4">Decrypting package...</p>';
+                readerHeader.innerHTML = displayName;
+                const response = await fetch(`http://127.0.0.1:8000/api/vault/read?path=${encodeURIComponent(filePath)}`);
+                const data = await response.json();
+                if (response.ok) {
+                    marked.setOptions({ breaks: true });
+                    let cleanText = data.content.replace(/\*\*(Authors|Link|Why this one, bro\?|Tech Stack|One-Line Pitch|Repo Link):\*\*/g, '<br><br>**$1:**').replace(/>\s*\[!(info|summary|example|quote|abstract)\]/gi, '> 💡⚡'); 
+                    readerContent.innerHTML = marked.parse(cleanText);
+                    gsap.from(readerContent, { opacity: 0, y: 10, duration: 0.5, clearProps: "all" });
+                } else readerContent.innerHTML = `<p class="text-red-500 font-mono text-center p-4 border border-red-900 rounded bg-red-950/20">>> [ERROR] Decryption Failure: ${data.detail}</p>`;
+            } catch (error) { readerContent.innerHTML = `<p class="text-red-500 font-mono text-center p-4 border border-red-900 rounded bg-red-950/20">>> [ERROR] Fatal: Communication severed with cryptologist API.</p>`; }
+        }
+
+        document.getElementById('chat-input').addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } });
+
+        async function sendChatMessage() {
+            const inputEl = document.getElementById('chat-input');
+            const msg = inputEl.value.trim();
+            if(!msg) return;
+            appendMessage('USER', msg);
+            inputEl.value = ''; inputEl.style.height = 'auto';
+            const loadingId = appendMessage('HELIX', '> breaking the firewall...');
+            runMatrixDecryption('synapse-matrix-canvas');
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, history: chatContext, context_path: mountedFilePath || ""  // [BUG FIX] 如果是null，就强制转成空字符串发送
+            }) });
+                const data = await response.json();
+                if (response.ok) { updateMessage(loadingId, data.reply); chatContext.push({"role": "user", "content": msg}); chatContext.push({"role": "assistant", "content": data.reply}); } 
+                else updateMessage(loadingId, `[ERROR] ${data.detail}`);
+            } catch (err) { 
+              updateMessage(loadingId, `[FATAL] Neural link severed.`); 
+          } finally {
+              stopMatrixDecryption('synapse-matrix-canvas'); // 踩刹车！
+          }
+        }
+
+        function appendMessage(role, text) {
+            const historyEl = document.getElementById('chat-history');
+            const id = 'msg-' + Date.now();
+            const isUser = role === 'USER';
+            const html = `<div id="${id}" class="flex gap-4 ${isUser ? 'flex-row-reverse' : ''} opacity-0 translate-y-4 shrink-0"><div class="w-8 h-8 rounded ${isUser ? 'border border-helix-neon text-helix-neon' : 'bg-helix-neon text-black'} flex items-center justify-center font-bold text-sm shrink-0">${isUser ? 'U' : 'H'}</div><div class="max-w-[80%] ${isUser ? 'bg-black border border-helix-neon/50 text-helix-neon' : 'bg-black border border-helix-border text-gray-300'} rounded-lg p-4 text-sm markdown-body">${isUser ? text.replace(/\n/g, '<br>') : marked.parse(text)}</div></div>`;
+            historyEl.insertAdjacentHTML('beforeend', html);
+            gsap.to(`#${id}`, { opacity: 1, y: 0, duration: 0.3 }); historyEl.scrollTop = historyEl.scrollHeight; return id;
+        }
+
+        function updateMessage(id, text) {
+            const msgEl = document.querySelector(`#${id} .markdown-body`);
+            marked.setOptions({ breaks: true }); msgEl.innerHTML = marked.parse(text);
+        }
+
+        function toggleAttachmentModal() {
+            const modal = document.getElementById('attachment-modal'); const list = document.getElementById('attachment-list');
+            if(modal.classList.contains('hidden')) {
+                list.innerHTML = ''; const allFiles = [...vaultDataCache.arxiv_papers, ...vaultDataCache.github_repos];
+                if(allFiles.length === 0) list.innerHTML = '<div class="text-xs text-gray-500 p-2 text-center">Vault is empty.</div>';
+                else allFiles.forEach(file => { const btn = document.createElement('button'); btn.className = "w-full text-left p-2 hover:bg-helix-border text-gray-300 hover:text-helix-neon text-xs font-mono rounded truncate transition-colors"; btn.innerText = file.name; btn.onclick = () => { mountFile(file.path, file.name); modal.classList.add('hidden'); }; list.appendChild(btn); });
+                modal.classList.remove('hidden'); gsap.from(modal, { opacity: 0, y: 10, duration: 0.2, clearProps: "all" });
+            } else modal.classList.add('hidden');
+        }
+
+        function mountFile(path, name) { mountedFilePath = path; document.getElementById('mounted-file-name').innerText = name; document.getElementById('mounted-file-pill').classList.remove('hidden'); document.getElementById('mounted-file-pill').classList.add('flex'); }
+        function unmountFile() { mountedFilePath = null; document.getElementById('mounted-file-pill').classList.add('hidden'); document.getElementById('mounted-file-pill').classList.remove('flex'); }
+
+        // ========================================================
+        // [NEW] V4.0 CORE CANVAS MATRIX RAIN ENGINE 
+        // ========================================================
+        function runMatrixDecryption(canvasId, duration) {
+            console.log("[MATRIX] 正在暴力破解图层:", canvasId);
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) { console.error("[MATRIX] 致命错误: 找不到画布!", canvasId); return; }
+            
+            // 强制脱掉 Tailwind 隐形斗篷
+            canvas.style.opacity = "0.8"; 
+            canvas.classList.remove("opacity-0");
+
+            const parent = canvas.parentElement;
+            canvas.width = parent.offsetWidth || 800;
+            canvas.height = parent.offsetHeight || 400; 
+
+            const ctx = canvas.getContext('2d');
+            const matrixChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%".split("");
+            const fontSize = 14;
+            let columns = Math.floor(canvas.width / fontSize);
+            let drops = [];
+            for (let x = 0; x < columns; x++) drops[x] = 1; 
+
+            if (canvas._matrixTicker) gsap.ticker.remove(canvas._matrixTicker);
+
+            canvas._matrixTicker = function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#00FF66';
+                ctx.font = fontSize + 'px Courier New, monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                }
+            };
+
+            gsap.ticker.add(canvas._matrixTicker);
+
+            // [NEW] 给画布装上遥控刹车
+            canvas.stopMatrix = function() {
+                // 0.8秒丝滑淡出过渡
+                gsap.to(canvas, { opacity: 0, duration: 0.8, onComplete: () => {
+                    gsap.ticker.remove(canvas._matrixTicker);
+                    canvas.classList.add("opacity-0");
+                }});
+            };
+        }
+
+        function stopMatrixDecryption(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (canvas && typeof canvas.stopMatrix === 'function') {
+                canvas.stopMatrix();
+            }
+        }
+
+        fetchVaultFiles();
+        switchTab('synapse'); 
+    </script>
+</body>
+</html>

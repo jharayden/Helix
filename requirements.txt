@@ -1,0 +1,20 @@
+# --- Project Helix V4.0 Core Dependencies ---
+
+# Web Framework & Server
+fastapi
+uvicorn
+
+# Cognitive Engine (GLM via standard SDK)
+openai
+
+# Telemetry & Scraping
+arxiv
+requests
+
+# Environment Management
+python-dotenv
+
+pywebview
+pyinstaller
+uvicorn
+apscheduler

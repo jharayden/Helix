@@ -1,0 +1,21 @@
+🚀 feat(core): Project Helix - THE TOMBSTONE UPDATE
+
+This update marks the end of the Hybrid-Cloud era. We have officially buried the 
+unstable GitHub Actions synchronization and established a pure, autonomous 
+local intelligence command center.
+
+🔥 The "Tombstone" Major Overhaul:
+- [Guardian Engine] Integrated APScheduler directly into the FastAPI core. 
+  The app now possesses a native biological clock (Arxiv @ 08:30, GitHub @ 19:30).
+- [Local Sovereignty] Stripped all 'git pull' and 'cloud-sync' dependencies. 
+  Reports are now generated and injected into the Obsidian Vault locally 
+  with zero network latency.
+- [Stability Hardening] Eradicated non-ASCII characters and localized 
+  punctuation encoding issues (GBK/UTF-8 conflict resolution).
+- [Architecture] Shifted from 'User-Triggered' to 'Persistent Resident' model. 
+  As long as the machine is on, the intel never stops.
+
+The cloud is dead. The local engine is eternal.
+Ignition sequence locked.
+
+I just hope my death makes more cents than my pathetic life.
