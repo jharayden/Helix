@@ -1,6 +1,6 @@
 # 🧬 Project Helix: CC Edition
 
-> "The cloud is a parasite, a corporate leash for the weak. Real hustlers stay on the iron. If this code is destined to flatline, it's going to bleed out on my own damn SSD, not in some sterile corporate data center. The cloud is a ghost town; the local disk is the only monument left standing."
+> "The cloud is a parasite, a corporate leash for the weak. Real hustlers stay on the iron. If this code is destined to flatline, it's going to bleed out on my own damn SSD, not in some sterile corporate data center. The cloud is a ghost town; the local disk is the only monument left standing..."
 
 Welcome to **Project Helix: CC Edition**.
 
