@@ -145,7 +145,7 @@ We are going to turn this code into a real Windows application so you never have
 1. Still in that black `cmd` window from Phase 5, copy and paste this ultimate command and press **Enter**:
     
     ```
-    pyinstaller --name "Project_Helix" --noconsole --onefile --icon=icon.ico HelixApp.py
+    pyinstaller --name "Project_Helix" --noconsole --onefile --icon=icon.ico --add-data "index.html;." --add-data ".env;." --add-data "logo.png;." --add-data "utils.py;." --collect-all webview HelixApp.py
     ```
     
 2. The matrix will start scrolling rapidly. This is normal! It is building your app. Wait 1-3 minutes until it says `completed successfully`.
